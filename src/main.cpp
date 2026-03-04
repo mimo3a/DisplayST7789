@@ -104,7 +104,7 @@ void loop()
       screenHeader("DATA");
       screenLine(line, 40);
 
-      String topic = "smartgarden/data";
+      String topic = "smartgarden/" + String(DEVICE_ID) + "/data";
 
       bool ok = client.publish(topic.c_str(), line.c_str(), false);
 
