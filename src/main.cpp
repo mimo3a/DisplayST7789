@@ -19,6 +19,10 @@ TFT_eSPI tft = TFT_eSPI();
 
 #define RXD2 16
 #define TXD2 17
+#define WAKE_STM_PIN 25
+
+const unsigned long MEASURE_INTERVAL_MS = 10000;
+unsigned long lastMeasureRequest = 0;
 
 // -------------------- DISPLAY --------------------
 
@@ -81,6 +85,9 @@ void setup()
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
 
+  pinMode(WAKE_STM_PIN, OUTPUT);
+  digitalWrite(WAKE_STM_PIN, LOW);
+
   tft.init();
   tft.setRotation(1);
   screenHeader("SMART GARDEN");
@@ -95,11 +102,26 @@ void setup()
 
 void loop()
 {
+  unsigned long now = millis();
+
   if (!client.connected()) {
     connectMQTT();
   }
 
   client.loop();
+
+  if (now - lastMeasureRequest >= MEASURE_INTERVAL_MS) {
+    lastMeasureRequest = now;
+
+    digitalWrite(WAKE_STM_PIN, HIGH);
+    delay(50);
+
+    Serial2.print("MEASURE\n");
+    Serial.println("UART TX: MEASURE");
+
+    delay(50);
+    digitalWrite(WAKE_STM_PIN, LOW);
+  }
 
   if (Serial2.available()) {
 
